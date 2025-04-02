@@ -44,7 +44,7 @@ internal extension Color {
     }
 
     var hex: String {
-#if os(iOS) || os(watchOS)
+#if os(iOS) || os(watchOS) || os(visionOS)
         let components = UIColor(self).cgColor.components
 #elseif os(macOS)
         let components = NSColor(self).cgColor.components

@@ -173,7 +173,7 @@ private extension RecapScreen {
 
 private extension View {
     var hasSafeAreaForBottomPadding: Bool {
-#if os(macOS)
+#if os(macOS) || os(visionOS)
         return false
 #else
         if UIDevice.current.userInterfaceIdiom == .pad {
