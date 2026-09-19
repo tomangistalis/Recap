@@ -409,7 +409,7 @@ private extension View {
 	}
 
     var hasSafeAreaForBottomPadding: Bool {
-		#if os(macOS) || targetEnvironment(macCatalyst)
+		#if os(macOS) || os(visionOS) || targetEnvironment(macCatalyst)
         return false
 		#else
         if UIDevice.current.userInterfaceIdiom == .pad {
