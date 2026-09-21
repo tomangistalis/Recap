@@ -33,8 +33,6 @@ public struct RecapScreen<LeadingView: View, TrailingView: View>: View {
 
     @State private var originalSelectedPageIndicatorColor: UIColor?
     @State private var originalDeselectedPageIndicatorColor: UIColor?
-    @State private var originalPageControlAccessible: Bool?
-    @State private var originalPageControlHidden: Bool?
     @State private var selectedIndex = 0
 
     private let releases: [Release]
@@ -176,11 +174,6 @@ private extension RecapScreen {
 
         UIPageControl.appearance().currentPageIndicatorTintColor = UIColor(self.selectedPageIndicatorColor)
         UIPageControl.appearance().pageIndicatorTintColor = UIColor(self.deselectedPageIndicatorColor)
-
-        self.originalPageControlAccessible = UIPageControl.appearance().isAccessibilityElement
-        self.originalPageControlHidden = UIPageControl.appearance().accessibilityElementsHidden
-        UIPageControl.appearance().isAccessibilityElement = false
-        UIPageControl.appearance().accessibilityElementsHidden = true
 #endif
     }
 
@@ -188,13 +181,6 @@ private extension RecapScreen {
 #if canImport(UIKit)
         UIPageControl.appearance().currentPageIndicatorTintColor = self.originalSelectedPageIndicatorColor
         UIPageControl.appearance().pageIndicatorTintColor = self.originalDeselectedPageIndicatorColor
-
-        if let originalPageControlAccessible {
-            UIPageControl.appearance().isAccessibilityElement = originalPageControlAccessible
-        }
-        if let originalPageControlHidden {
-            UIPageControl.appearance().accessibilityElementsHidden = originalPageControlHidden
-        }
 #endif
     }
 
