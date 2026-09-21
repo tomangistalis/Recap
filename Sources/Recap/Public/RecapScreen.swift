@@ -29,9 +29,12 @@ public struct RecapScreen<LeadingView: View, TrailingView: View>: View {
     @Environment(\.recapScreenDismissButtonStyle) private var dismissButtonStyle
     @Environment(\.recapScreenDismissButtonTitle) private var dismissButtonTitle
     @Environment(\.recapScreenDismissAction) private var dismissAction
+    @Environment(\.recapScreenAccessibility) private var pageAccessibility
 
     @State private var originalSelectedPageIndicatorColor: UIColor?
     @State private var originalDeselectedPageIndicatorColor: UIColor?
+    @State private var originalPageControlAccessible: Bool?
+    @State private var originalPageControlHidden: Bool?
     @State private var selectedIndex = 0
 
     private let releases: [Release]
@@ -49,19 +52,21 @@ public struct RecapScreen<LeadingView: View, TrailingView: View>: View {
             TabView(selection: $selectedIndex) {
                 self.leadingView
                     .tag(self.tabIndex(from: .leadingView))
+                    .recapPageContainer(self.leadingPageAccessibility)
 
-                ForEach(self.displayedReleases) { release in
+                ForEach(Array(self.displayedReleases.enumerated()), id: \.element.id) { index, release in
                     ReleaseView(release: release)
                         .padding(.bottom, 32.0)
-                        .tag((self.tabIndex(from: .release(
-                            self.displayedReleases.firstIndex(of: release) ?? 0)
-                        )))
+                        .tag(self.tabIndex(from: .release(index)))
+                        .recapPageContainer(self.releasePageAccessibility(release: release, index: index))
                 }
 
                 self.trailingView
                     .tag(self.tabIndex(from: .trailingView))
+                    .recapPageContainer(self.trailingPageAccessibility)
             }
             .tabViewStyle(.page(indexDisplayMode: self.releases.count > 1 ? .always : .never))
+            .accessibilityElement(children: .contain)
             .background(self.derivedBackgroundStyle)
 
             Button(action: {
@@ -136,6 +141,26 @@ private extension RecapScreen {
         self.releases.reversed()
     }
 
+    var hasLeadingView: Bool {
+        LeadingView.self != EmptyView.self
+    }
+
+    var hasTrailingView: Bool {
+        TrailingView.self != EmptyView.self
+    }
+
+    var leadingPageAccessibility: RecapScreenPageAccessibility? {
+        self.pageAccessibility.resolvedLeading(isPresent: self.hasLeadingView)
+    }
+
+    var trailingPageAccessibility: RecapScreenPageAccessibility? {
+        self.pageAccessibility.resolvedTrailing(isPresent: self.hasTrailingView)
+    }
+
+    func releasePageAccessibility(release: Release, index: Int) -> RecapScreenPageAccessibility {
+        self.pageAccessibility.resolvedRelease(title: release.title, index: index)
+    }
+
     var derivedBackgroundStyle: AnyShapeStyle {
         if let backgroundStyle {
             backgroundStyle
@@ -151,6 +176,11 @@ private extension RecapScreen {
 
         UIPageControl.appearance().currentPageIndicatorTintColor = UIColor(self.selectedPageIndicatorColor)
         UIPageControl.appearance().pageIndicatorTintColor = UIColor(self.deselectedPageIndicatorColor)
+
+        self.originalPageControlAccessible = UIPageControl.appearance().isAccessibilityElement
+        self.originalPageControlHidden = UIPageControl.appearance().accessibilityElementsHidden
+        UIPageControl.appearance().isAccessibilityElement = false
+        UIPageControl.appearance().accessibilityElementsHidden = true
 #endif
     }
 
@@ -158,9 +188,15 @@ private extension RecapScreen {
 #if canImport(UIKit)
         UIPageControl.appearance().currentPageIndicatorTintColor = self.originalSelectedPageIndicatorColor
         UIPageControl.appearance().pageIndicatorTintColor = self.originalDeselectedPageIndicatorColor
+
+        if let originalPageControlAccessible {
+            UIPageControl.appearance().isAccessibilityElement = originalPageControlAccessible
+        }
+        if let originalPageControlHidden {
+            UIPageControl.appearance().accessibilityElementsHidden = originalPageControlHidden
+        }
 #endif
     }
-
 
     func tabIndex(from startIndex: RecapScreenStartIndex) -> Int {
         switch startIndex {
@@ -168,6 +204,37 @@ private extension RecapScreen {
         case .trailingView: self.releases.count + 1
         case .release(let index): index + 1
         }
+    }
+}
+
+private struct RecapPageContainerModifier: ViewModifier {
+    var page: RecapScreenPageAccessibility?
+
+    func body(content: Content) -> some View {
+        if let page {
+            labelled(content, page: page)
+        } else {
+            content.accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private func labelled(_ content: Content, page: RecapScreenPageAccessibility) -> some View {
+        let identified = content
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(page.identifier)
+
+        if page.title.isEmpty {
+            identified
+        } else {
+            identified.accessibilityLabel(page.title)
+        }
+    }
+}
+
+private extension View {
+    func recapPageContainer(_ page: RecapScreenPageAccessibility?) -> some View {
+        modifier(RecapPageContainerModifier(page: page))
     }
 }
 

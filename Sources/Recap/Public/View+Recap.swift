@@ -87,6 +87,11 @@ public extension View {
             self.environment(\.recapScreenDismissAction, nil)
         }
     }
+
+    /// Configures accessibility titles and identifiers for `RecapScreen` pager pages.
+    func recapScreenAccessibility(_ accessibility: RecapScreenAccessibility) -> some View {
+        self.environment(\.recapScreenAccessibility, accessibility)
+    }
 }
 
 // MARK: Environment
@@ -230,5 +235,16 @@ internal extension EnvironmentValues {
 
     private struct HeaderSpacingKey: EnvironmentKey {
         static let defaultValue = 32.0
+    }
+
+    // MARK: Accessibility
+
+    var recapScreenAccessibility: RecapScreenAccessibility {
+        get { self[RecapScreenAccessibilityKey.self] }
+        set { self[RecapScreenAccessibilityKey.self] = newValue }
+    }
+
+    private struct RecapScreenAccessibilityKey: EnvironmentKey {
+        static let defaultValue = RecapScreenAccessibility.default
     }
 }

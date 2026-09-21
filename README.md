@@ -116,6 +116,7 @@ func recapScreenPadding(_ insets: EdgeInsets) -> some View
 func recapScreenHeaderSpacing(_ spacing: CGFloat) -> some View
 func recapScreenItemSpacing(_ spacing: CGFloat) -> some View
 func recapScreenDismissAction(_ dismissAction: (() -> Void)?) -> some View
+func recapScreenAccessibility(_ accessibility: RecapScreenAccessibility) -> some View
 ```
 
 Example usage:
@@ -147,6 +148,17 @@ RecapScreen(
 ```
 
 In my app [Plinky](https://plinky.app), I use the leading view to display the app's upcoming roadmap ahead of the most recent features, and the trailing view displays a support screen for people to reach out to me after browsing the feature list.
+
+### Accessibility
+
+Each pager page is a labelled container. Releases use `Release.title` and `recap.page.release{index}`. Configure leading and trailing titles and identifiers from your app:
+
+```swift
+.recapScreenAccessibility(RecapScreenAccessibility(
+    leadingPage: .init(title: "Roadmap", identifier: "recap.page.leading"),
+    trailingPage: .init(title: "Support", identifier: "recap.page.trailing")
+))
+```
 
 ### Semantic Versioning
 
